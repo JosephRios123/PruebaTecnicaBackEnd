@@ -1,4 +1,4 @@
-# Proyecto de Búsqueda de Vuelos
+# Proyecto - BackEnd
 
 Este proyecto es una aplicación de búsqueda de vuelos desarrollada con Laravel para el backend y React para el frontend. A continuación, se presentan las instrucciones paso a paso para ejecutar el proyecto.
 
@@ -22,12 +22,10 @@ Ve a la página de descargas de MySQL y selecciona tu sistema operativo.
 [MySQL](https://dev.mysql.com/downloads/workbench/)
 Sigue las instrucciones de instalación proporcionadas en el sitio.
 
-# 2. Crea una nueva base de datos:
+# 2. Copia la base de datos que está dentro del proyecto:
 
-Accede a MySQL a través de la línea de comandos o utilizando un cliente como MySQL Workbench.
-Ejecuta el siguiente comando para crear una nueva base de datos:
-
-<!-- CREATE DATABASE nombre_de_tu_base_de_datos; -->
+La base de datos está dentro del proyecto con el nombre de "pruebatecnica.sql".
+Puedes abrir el archivo en tu editor de texto y copiar el script para pegarlo en MySQL para crear las tablas necesarias
 
 # 3. Configura el usuario de MySQL:
 
