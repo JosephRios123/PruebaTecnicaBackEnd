@@ -39,8 +39,8 @@ FLUSH PRIVILEGES;
 ## Instalación del Backend (Laravel)
 
 # 1. Clona el repositorio del backend:
-git clone https://github.com/JosephRios123/PruebaTecnica.git
-cd PruebaTecnica
+git clone https://github.com/JosephRios123/PruebaTecnicaBackEnd.git
+cd PruebaTecnicaBackEnd
 
 # 2. Instala las dependencias de Laravel:
 composer install
