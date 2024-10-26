@@ -191,11 +191,23 @@ class FlightController extends Controller
         if (!$request->has('searchs') || !is_numeric($request->input('searchs')) || $request->input('searchs') < 1) {
             return response()->json(['error' => 'El campo de cantidad de resultados (searchs) es requerido, debe ser un número entero y al menos 1.'], 400);
         }
+
+        // Validación adicional para la suma de pasajeros
+        $child = $request->input('child') ?? 0;
+        $baby = $request->input('baby') ?? 0;
+        $totalPassengers = $request->input('adult') + $child + $baby;
+
+        if ($totalPassengers !== (int)$request->input('qtyPassengers')) {
+            return response()->json(['error' => 'La cantidad total de pasajeros debe ser la suma de los adultos, niños y bebés'], 400);
+        }
+
         // Validar los parámetros de la solicitud
         $request->validate([
             'itinerary' => 'required|array',
             'qtyPassengers' => 'required|integer|min:1',
             'adult' => 'required|integer|min:1',
+            'child' => 'nullable|integer|min:0', // Permitir que 'child' sea opcional y mínimo 0
+            'baby' => 'nullable|integer|min:0', // Permitir que 'baby' sea opcional y mínimo 0
             'searchs' => 'required|integer|min:1'
         ]);
 
@@ -205,10 +217,12 @@ class FlightController extends Controller
             // Llamada a la API externa
             $response = Http::post($apiUrl . '/flights/v2', [
                 'itinerary' => $request->input('itinerary'),
-                'qtyPassengers' => $request->input('qtyPassengers'),
+                'qtyPassengers' => $totalPassengers,
                 'adult' => $request->input('adult'),
+                'child' => $child,
+                'baby' => $baby,
                 'currency' => 'COP',
-                'searchs' => $request->input('searchs') // Agregado para enviar el campo searchs
+                'searchs' => $request->input('searchs')
             ]);
 
             // Verificar si la respuesta de la API fue exitosa
@@ -220,8 +234,8 @@ class FlightController extends Controller
             $flights = $response->json();
 
             // Asegúrate de que la respuesta contenga vuelos
-            if (!isset($flights['data']['Seg1'])) {
-                return response()->json(['error' => 'No se encontraron vuelos disponibles'], 404);
+            if (empty($flights['data']['Seg1'])) {
+                return response()->json(['error' => 'No hay registros que coincidan con los parámetros proporcionados.'], 404);
             }
 
             // Formatear la respuesta de los vuelos
@@ -263,6 +277,8 @@ class FlightController extends Controller
 
         return $result; // Devuelve solo los vuelos formateados que necesitas
     }
+
+
 
     /**
      * @OA\Schema(
@@ -360,7 +376,18 @@ class FlightController extends Controller
         $totalPassengers = $request->input('adult') + $child + $baby;
 
         if ($totalPassengers !== (int)$request->input('qty_passengers')) {
-            $errors[] = 'La cantidad total de pasajeros debe ser la suma de los adultos, niños y bebés';
+            $errors[] = 'La cantidad total de pasajeros debe ser la suma de los adultos, niños y bebés.';
+        }
+
+        // Validación de fecha de itinerarios
+        $itineraries = $request->input('itineraries');
+        foreach ($itineraries as $itinerary) {
+            $departureDate = new \DateTime($itinerary['hour']);
+            $currentDate = new \DateTime();
+            if ($departureDate < $currentDate) {
+                $errors[] = 'La fecha de salida no puede ser anterior a la fecha actual.';
+                break; // Salir del bucle si se encuentra un error
+            }
         }
 
         // Si hay errores, retornarlos juntos
@@ -377,7 +404,7 @@ class FlightController extends Controller
         ]);
 
         // Guardar itinerarios
-        foreach ($request->input('itineraries') as $itinerary) {
+        foreach ($itineraries as $itinerary) {
             Itinerary::create([
                 'reserve_id' => $reserve->id,
                 'departure_city' => $itinerary['departureCity'],
@@ -388,6 +415,7 @@ class FlightController extends Controller
 
         return response()->json(['message' => 'Reservación guardada correctamente. Mira tus reservas!!'], 201);
     }
+
 
 
 
