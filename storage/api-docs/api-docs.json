@@ -1,0 +1,565 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Prueba Técnica: Sistema de Búsqueda de Vuelos",
+        "description": "API para gestionar reservas de vuelos y obtener información de aeropuertos y vuelos.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/airports": {
+            "post": {
+                "tags": [
+                    "Aeropuertos"
+                ],
+                "summary": "Obtener aeropuertos",
+                "operationId": "30dc94b28459ecbf722b181220d42108",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "medellin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Aeropuertos recuperados exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Airport"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "El parámetro code es requerido."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/flights": {
+            "post": {
+                "tags": [
+                    "Vuelos"
+                ],
+                "summary": "Obtener vuelos",
+                "operationId": "64a6f7e7f585edcf896b3c96bc72c7ff",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "itinerary",
+                                    "qtyPassengers",
+                                    "adult",
+                                    "searchs"
+                                ],
+                                "properties": {
+                                    "qtyPassengers": {
+                                        "description": "Número total de pasajeros",
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "adult": {
+                                        "description": "Número de adultos",
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "child": {
+                                        "description": "Número de niños",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "baby": {
+                                        "description": "Número de bebés",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "searchs": {
+                                        "description": "Número de búsquedas a realizar",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "itinerary": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "departureCity": {
+                                                    "description": "Ciudad de salida",
+                                                    "type": "string",
+                                                    "example": "MDE"
+                                                },
+                                                "arrivalCity": {
+                                                    "description": "Ciudad de llegada",
+                                                    "type": "string",
+                                                    "example": "BOG"
+                                                },
+                                                "hour": {
+                                                    "description": "Hora de salida",
+                                                    "type": "string",
+                                                    "example": "2024-10-25T10:00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vuelos recuperados exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Flight"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "El parámetro itinerary es requerido."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reserve": {
+            "post": {
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Guardar una reserva",
+                "operationId": "452650190df30d13a1979723cb03d223",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "currency",
+                                    "qty_passengers",
+                                    "adult",
+                                    "itineraries"
+                                ],
+                                "properties": {
+                                    "currency": {
+                                        "description": "Moneda de la reserva",
+                                        "type": "string",
+                                        "example": "USD"
+                                    },
+                                    "qty_passengers": {
+                                        "description": "Cantidad de pasajeros",
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "adult": {
+                                        "description": "Cantidad de adultos",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "child": {
+                                        "description": "Cantidad de niños",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "baby": {
+                                        "description": "Cantidad de bebés",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "itineraries": {
+                                        "description": "Arreglo de itinerarios",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/Itinerary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reservación guardada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reservación guardada correctamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "El parámetro qtyPassengers es requerido, debe ser un número entero y al menos 1."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/obtenerReservas": {
+            "get": {
+                "tags": [
+                    "Reservas"
+                ],
+                "summary": "Obtener todas las reservas",
+                "operationId": "e1fdd6bf40dd8da14e535510751afdbc",
+                "responses": {
+                    "200": {
+                        "description": "Reservas recuperadas exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID de la reserva",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "currency": {
+                                                "description": "Moneda de la reserva",
+                                                "type": "string",
+                                                "example": "COP"
+                                            },
+                                            "qty_passengers": {
+                                                "description": "Número total de pasajeros",
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "adult": {
+                                                "description": "Número de adultos",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "child": {
+                                                "description": "Número de niños",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "baby": {
+                                                "description": "Número de bebés",
+                                                "type": "integer",
+                                                "example": 0
+                                            },
+                                            "itineraries": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "departure_city": {
+                                                            "description": "Ciudad de salida",
+                                                            "type": "string",
+                                                            "example": "MDE"
+                                                        },
+                                                        "arrival_city": {
+                                                            "description": "Ciudad de llegada",
+                                                            "type": "string",
+                                                            "example": "BOG"
+                                                        },
+                                                        "departure_hour": {
+                                                            "description": "Hora de salida",
+                                                            "type": "string",
+                                                            "example": "2024-10-25T10:00:00"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Airport": {
+                "title": "Airport",
+                "description": "Modelo de aeropuerto",
+                "properties": {
+                    "ciudad": {
+                        "description": "Ciudad del aeropuerto",
+                        "type": "string",
+                        "example": "Medellin"
+                    },
+                    "nombre": {
+                        "description": "Nombre del aeropuerto",
+                        "type": "string",
+                        "example": "Jose Maria Cordova"
+                    },
+                    "país": {
+                        "description": "Nombre del país",
+                        "type": "string",
+                        "example": "Colombia"
+                    },
+                    "codigo IATA": {
+                        "description": "Codigo IATA de la ciudad",
+                        "type": "string",
+                        "example": "MDE"
+                    }
+                },
+                "type": "object"
+            },
+            "Flight": {
+                "title": "Flight",
+                "description": "Modelo de vuelo",
+                "properties": {
+                    "dateOfDeparture": {
+                        "description": "Fecha de salida",
+                        "type": "string",
+                        "example": "2024-11-20"
+                    },
+                    "timeOfDeparture": {
+                        "description": "Hora de salida",
+                        "type": "string",
+                        "example": "10:30"
+                    },
+                    "dateOfArrival": {
+                        "description": "Fecha de llegada",
+                        "type": "string",
+                        "example": "2024-11-20"
+                    },
+                    "timeOfArrival": {
+                        "description": "Hora de llegada",
+                        "type": "string",
+                        "example": "14:45"
+                    },
+                    "marketingCarrier": {
+                        "description": "Código de la aerolínea",
+                        "type": "string",
+                        "example": "AA"
+                    },
+                    "flightOrtrainNumber": {
+                        "description": "Número de vuelo",
+                        "type": "string",
+                        "example": "1234"
+                    },
+                    "locationId": {
+                        "properties": {
+                            "departureCity": {
+                                "description": "Ciudad de salida",
+                                "type": "string",
+                                "example": "BOG"
+                            },
+                            "arrivalCity": {
+                                "description": "Ciudad de llegada",
+                                "type": "string",
+                                "example": "MIA"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Reserve": {
+                "title": "Reserve",
+                "description": "Modelo de reserva",
+                "properties": {
+                    "currency": {
+                        "description": "Moneda de la reserva",
+                        "type": "string",
+                        "example": "COP"
+                    },
+                    "qty_passengers": {
+                        "description": "Cantidad de pasajeros",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "adult": {
+                        "description": "Cantidad de adultos",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "child": {
+                        "description": "Cantidad de niños",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "baby": {
+                        "description": "Cantidad de bebés",
+                        "type": "integer",
+                        "example": 0
+                    }
+                },
+                "type": "object"
+            },
+            "Itinerary": {
+                "title": "Itinerary",
+                "description": "Modelo de itinerario",
+                "properties": {
+                    "departure_city": {
+                        "description": "Ciudad de salida",
+                        "type": "string",
+                        "example": "BOG"
+                    },
+                    "arrival_city": {
+                        "description": "Ciudad de llegada",
+                        "type": "string",
+                        "example": "MIA"
+                    },
+                    "departure_hour": {
+                        "description": "Hora de salida",
+                        "type": "string",
+                        "example": "2024-10-29T05:00:00.000Z"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Aeropuertos",
+            "description": "Aeropuertos"
+        },
+        {
+            "name": "Vuelos",
+            "description": "Vuelos"
+        },
+        {
+            "name": "Reservas",
+            "description": "Reservas"
+        }
+    ]
+}
