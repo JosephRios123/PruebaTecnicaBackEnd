@@ -227,16 +227,11 @@ class FlightController extends Controller
 
             // Verificar si la respuesta de la API fue exitosa
             if ($response->failed()) {
-                return response()->json(['error' => 'No se pudieron recuperar los datos de los vuelos', 'details' => $response->json()], 500);
+                return response()->json(['error' => 'No se pudieron recuperar los datos de los vuelos o No hay registros que coincidan con los parámetros proporcionados.', 'details' => $response->json()], 500);
             }
 
             // Obtener los datos de vuelos
             $flights = $response->json();
-
-            // Asegúrate de que la respuesta contenga vuelos
-            if (empty($flights['data']['Seg1'])) {
-                return response()->json(['error' => 'No hay registros que coincidan con los parámetros proporcionados.'], 404);
-            }
 
             // Formatear la respuesta de los vuelos
             $formattedFlights = $this->formatFlightsResponse($flights['data']['Seg1'], $request->input('searchs'));
