@@ -125,6 +125,11 @@
                                         "type": "integer",
                                         "example": 2
                                     },
+                                    "arolinea": {
+                                        "description": "Nombre de la Aerolinea",
+                                        "type": "string",
+                                        "example": "JA"
+                                    },
                                     "itinerary": {
                                         "type": "array",
                                         "items": {
@@ -216,17 +221,11 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "currency",
                                     "qty_passengers",
                                     "adult",
                                     "itineraries"
                                 ],
                                 "properties": {
-                                    "currency": {
-                                        "description": "Moneda de la reserva",
-                                        "type": "string",
-                                        "example": "USD"
-                                    },
                                     "qty_passengers": {
                                         "description": "Cantidad de pasajeros",
                                         "type": "integer",
@@ -496,11 +495,6 @@
                 "title": "Reserve",
                 "description": "Modelo de reserva",
                 "properties": {
-                    "currency": {
-                        "description": "Moneda de la reserva",
-                        "type": "string",
-                        "example": "COP"
-                    },
                     "qty_passengers": {
                         "description": "Cantidad de pasajeros",
                         "type": "integer",

@@ -28,7 +28,7 @@ class FlightController extends Controller
      *     @OA\Property(property="ciudad", type="string", example="Medellin", description="Ciudad del aeropuerto"),
      *     @OA\Property(property="nombre", type="string", example="Jose Maria Cordova", description="Nombre del aeropuerto"),
      *     @OA\Property(property="país", type="string", example="Colombia", description="Nombre del país"),
-     *     @OA\Property(property="codigo IATA", type="string", example="MDE", description="Codigo IATA de la ciudad")
+     *     @OA\Property(property="codigo IATA", type="string", example="MDE", description="Codigo IATA de la ciudad"),
      * )
      * 
      * @OA\Post(
@@ -65,7 +65,6 @@ class FlightController extends Controller
 
     public function obtenerAeropuertos(Request $request)
     {
-
         if (!$request->has('code') || empty($request->input('code'))) {
             return response()->json(['error' => 'El parámetro code es requerido.'], 400);
         }
@@ -89,7 +88,6 @@ class FlightController extends Controller
         }
     }
 
-
     private function formatAirportsResponse($airports)
     {
         // Comprobar si hay ciudades disponibles
@@ -103,10 +101,11 @@ class FlightController extends Controller
                 'city' => $city['nameCity'] ?? '',
                 'name' => $city['new_airports'][0]['nameAirport'] ?? '',
                 'country' => $city['new_country']['nameCountry'] ?? '',
-                'iata' => $city['new_airports'][0]['codeIataAirport'] ?? ''
+                'iata' => $city['new_airports'][0]['codeIataAirport'] ?? '',
             ];
         }, $airports['cities']);
     }
+
 
     /**
      * @OA\Schema(
@@ -144,6 +143,7 @@ class FlightController extends Controller
      *             @OA\Property(property="child", type="integer", example=0, description="Número de niños"),
      *             @OA\Property(property="baby", type="integer", example=0, description="Número de bebés"),
      *             @OA\Property(property="searchs", type="integer", example=2, description="Número de búsquedas a realizar"),
+     *             @OA\Property(property="arolinea", type="string", example="JA", description="Nombre de la Aerolinea"),
      *             @OA\Property(property="itinerary", type="array", 
      *                 @OA\Items(
      *                     type="object",
@@ -177,33 +177,24 @@ class FlightController extends Controller
 
     public function obtenerVuelos(Request $request)
     {
-        if (!$request->has('currency') || empty($request->input('currency'))) {
-            return response()->json(['error' => 'El parámetro currency es requerido.'], 400);
-        }
-
-        if (!$request->has('itinerary') || !is_array($request->input('itinerary')) || empty($request->input('itinerary'))) {
-            return response()->json(['error' => 'El parámetro itinerary es requerido y debe ser un array no vacío.'], 400);
-        }
-
         // Validación del campo 'qtyPassengers' (debe ser un entero, no estar vacío y ser al menos 1)
         if (!$request->has('qtyPassengers') || !is_numeric($request->input('qtyPassengers')) || $request->input('qtyPassengers') < 1) {
-            return response()->json(['error' => 'El parámetro qtyPassengers es requerido, debe ser un número entero y al menos 1.'], 400);
+            return response()->json(['error' => 'El campo de cantidad de pasajeros (qtyPassengers) es requerido, debe ser un número entero y al menos 1.'], 400);
         }
 
         // Validación del campo 'adult' (debe ser un entero, no estar vacío y ser al menos 1)
         if (!$request->has('adult') || !is_numeric($request->input('adult')) || $request->input('adult') < 1) {
-            return response()->json(['error' => 'El parámetro adult es requerido, debe ser un número entero y al menos 1.'], 400);
+            return response()->json(['error' => 'El campo de cantidad de adultos (adult) es requerido, debe ser un número entero y al menos 1.'], 400);
         }
 
         // Validación del campo 'searchs' (debe ser un entero, no estar vacío, y ser al menos 1)
         if (!$request->has('searchs') || !is_numeric($request->input('searchs')) || $request->input('searchs') < 1) {
-            return response()->json(['error' => 'El parámetro searchs es requerido, debe ser un número entero y al menos 1.'], 400);
+            return response()->json(['error' => 'El campo de cantidad de resultados (searchs) es requerido, debe ser un número entero y al menos 1.'], 400);
         }
         // Validar los parámetros de la solicitud
         $request->validate([
             'itinerary' => 'required|array',
             'qtyPassengers' => 'required|integer|min:1',
-            'currency' => 'required|string',
             'adult' => 'required|integer|min:1',
             'searchs' => 'required|integer|min:1'
         ]);
@@ -280,7 +271,6 @@ class FlightController extends Controller
      *     title="Reserve",
      *     description="Modelo de reserva",
      *     properties={
-     *         @OA\Property(property="currency", type="string", example="COP", description="Moneda de la reserva"),
      *         @OA\Property(property="qty_passengers", type="integer", example=3, description="Cantidad de pasajeros"),
      *         @OA\Property(property="adult", type="integer", example=2, description="Cantidad de adultos"),
      *         @OA\Property(property="child", type="integer", example=1, description="Cantidad de niños"),
@@ -307,8 +297,7 @@ class FlightController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"currency", "qty_passengers", "adult", "itineraries"},
-     *             @OA\Property(property="currency", type="string", example="USD", description="Moneda de la reserva"),
+     *             required={"qty_passengers", "adult", "itineraries"},
      *             @OA\Property(property="qty_passengers", type="integer", example=3, description="Cantidad de pasajeros"),
      *             @OA\Property(property="adult", type="integer", example=2, description="Cantidad de adultos"),
      *             @OA\Property(property="child", type="integer", example=1, description="Cantidad de niños"),
@@ -334,7 +323,6 @@ class FlightController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="error", type="array", 
      *                 @OA\Items(type="string", example="El parámetro qtyPassengers es requerido, debe ser un número entero y al menos 1."),
-     *                 @OA\Items(type="string", example="El parámetro currency es requerido."),
      *                 @OA\Items(type="string", example="El parámetro adult es requerido, debe ser un número entero y al menos 1."),
      *                 @OA\Items(type="string", example="El parámetro itineraries es requerido y debe ser un array no vacío.")
      *             )
@@ -354,20 +342,25 @@ class FlightController extends Controller
     {
         $errors = [];
 
-        if (!$request->has('currency') || empty($request->input('currency'))) {
-            $errors[] = 'El parámetro currency es requerido.';
-        }
-
         if (!$request->has('itineraries') || !is_array($request->input('itineraries')) || empty($request->input('itineraries'))) {
             $errors[] = 'El parámetro itineraries es requerido y debe ser un array no vacío.';
         }
 
         if (!$request->has('qty_passengers') || !is_numeric($request->input('qty_passengers')) || $request->input('qty_passengers') < 1) {
-            $errors[] = 'El parámetro qtyPassengers es requerido, debe ser un número entero y al menos 1.';
+            $errors[] = 'El parámetro qty_passengers es requerido, debe ser un número entero y al menos 1.';
         }
 
         if (!$request->has('adult') || !is_numeric($request->input('adult')) || $request->input('adult') < 1) {
             $errors[] = 'El parámetro adult es requerido, debe ser un número entero y al menos 1.';
+        }
+
+        // Validación adicional para la suma de pasajeros
+        $child = $request->input('child') ?? 0;
+        $baby = $request->input('baby') ?? 0;
+        $totalPassengers = $request->input('adult') + $child + $baby;
+
+        if ($totalPassengers !== (int)$request->input('qty_passengers')) {
+            $errors[] = 'La cantidad total de pasajeros debe ser la suma de los adultos, niños y bebés';
         }
 
         // Si hay errores, retornarlos juntos
@@ -377,25 +370,25 @@ class FlightController extends Controller
 
         // Crear la reserva
         $reserve = Reserve::create([
-            'currency' => $request->input('currency'),
             'qty_passengers' => $request->input('qty_passengers'),
             'adult' => $request->input('adult'),
-            'child' => $request->input('child') ?? 0,
-            'baby' => $request->input('baby') ?? 0,
+            'child' => $child,
+            'baby' => $baby,
         ]);
 
         // Guardar itinerarios
         foreach ($request->input('itineraries') as $itinerary) {
             Itinerary::create([
                 'reserve_id' => $reserve->id,
-                'departure_city' => $itinerary['departure_city'],
-                'arrival_city' => $itinerary['arrival_city'],
-                'departure_hour' => $itinerary['departure_hour'],
+                'departure_city' => $itinerary['departureCity'],
+                'arrival_city' => $itinerary['arrivalCity'],
+                'departure_hour' => $itinerary['hour'],
             ]);
         }
 
-        return response()->json(['message' => 'Reservación guardada correctamente'], 201);
+        return response()->json(['message' => 'Reservación guardada correctamente. Mira tus reservas!!'], 201);
     }
+
 
 
     /**
