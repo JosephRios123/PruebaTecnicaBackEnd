@@ -18,7 +18,7 @@ Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu
 - [Laravel](https://laravel.com/docs/11.x/installation#installation-via-composer)
 - [Node.js](https://nodejs.org/en/download/)
 - [npm](https://www.npmjs.com/get-npm)
--[xampp](https://www.apachefriends.org/es/index.html)
+- [xampp](https://www.apachefriends.org/es/index.html)
 
 Para mejor entendimiento de la instalación de cada programa, 
 recomiendo ver un video en YouTube
