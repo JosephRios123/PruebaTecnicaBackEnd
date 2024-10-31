@@ -19,8 +19,9 @@ Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu
 - [Node.js](https://nodejs.org/en/download/)
 - [npm](https://www.npmjs.com/get-npm)
 -[xampp](https://www.apachefriends.org/es/index.html)
-<!-- Para mejor entendimiento de la instalación de cada programa, 
-recomiendo ver un video en YouTube -->
+
+Para mejor entendimiento de la instalación de cada programa, 
+recomiendo ver un video en YouTube
 
 ## Instalación de la base de datos 
 
