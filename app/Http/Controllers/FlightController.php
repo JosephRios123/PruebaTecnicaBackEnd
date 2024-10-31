@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AirportRequest;
 use App\Models\Reserve;
 use App\Models\Itinerary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+
 
 /**
  * @OA\Info(
@@ -187,11 +189,6 @@ class FlightController extends Controller
             return response()->json(['error' => 'El campo de cantidad de adultos (adult) es requerido, debe ser un número entero y al menos 1.'], 400);
         }
 
-        // Validación del campo 'searchs' (debe ser un entero, no estar vacío, y ser al menos 1)
-        if (!$request->has('searchs') || !is_numeric($request->input('searchs')) || $request->input('searchs') < 1) {
-            return response()->json(['error' => 'El campo de cantidad de resultados (searchs) es requerido, debe ser un número entero y al menos 1.'], 400);
-        }
-
         // Validación adicional para la suma de pasajeros
         $child = $request->input('child') ?? 0;
         $baby = $request->input('baby') ?? 0;
@@ -203,12 +200,11 @@ class FlightController extends Controller
 
         // Validar los parámetros de la solicitud
         $request->validate([
-            'itinerary' => 'required|array',
             'qtyPassengers' => 'required|integer|min:1',
             'adult' => 'required|integer|min:1',
             'child' => 'nullable|integer|min:0', // Permitir que 'child' sea opcional y mínimo 0
             'baby' => 'nullable|integer|min:0', // Permitir que 'baby' sea opcional y mínimo 0
-            'searchs' => 'required|integer|min:1'
+            'itinerary' => 'required|array',
         ]);
 
         try {
@@ -216,13 +212,11 @@ class FlightController extends Controller
 
             // Llamada a la API externa
             $response = Http::post($apiUrl . '/flights/v2', [
-                'itinerary' => $request->input('itinerary'),
                 'qtyPassengers' => $totalPassengers,
                 'adult' => $request->input('adult'),
                 'child' => $child,
                 'baby' => $baby,
-                'currency' => 'COP',
-                'searchs' => $request->input('searchs')
+                'itinerary' => $request->input('itinerary'),
             ]);
 
             // Verificar si la respuesta de la API fue exitosa
@@ -234,7 +228,7 @@ class FlightController extends Controller
             $flights = $response->json();
 
             // Formatear la respuesta de los vuelos
-            $formattedFlights = $this->formatFlightsResponse($flights['data']['Seg1'], $request->input('searchs'));
+            $formattedFlights = $this->formatFlightsResponse($flights['data']['Seg1']);
 
             return response()->json([
                 'status' => 200,
@@ -245,33 +239,31 @@ class FlightController extends Controller
         }
     }
 
-    private function formatFlightsResponse($flights, $searchs)
+    private function formatFlightsResponse($flights)
     {
         // Inicializar el arreglo de resultados
         $result = [];
 
         foreach ($flights as $flightSegment) {
             foreach ($flightSegment['segments'] as $flight) {
-                // Limitar el número de resultados a lo que se especificó en searchs
-                if (count($result) < $searchs) {
-                    $result[] = [
-                        'dateOfDeparture' => $flight['productDateTime']['dateOfDeparture'] ?? '',
-                        'timeOfDeparture' => $flight['productDateTime']['timeOfDeparture'] ?? '',
-                        'dateOfArrival' => $flight['productDateTime']['dateOfArrival'] ?? '',
-                        'timeOfArrival' => $flight['productDateTime']['timeOfArrival'] ?? '',
-                        'marketingCarrier' => $flight['companyId']['marketingCarrier'] ?? '',
-                        'flightOrtrainNumber' => $flight['flightOrtrainNumber'] ?? '',
-                        'locationId' => [
-                            'departureCity' => $flight['location'][0]['locationId'] ?? '',
-                            'arrivalCity' => $flight['location'][1]['locationId'] ?? ''
-                        ]
-                    ];
-                }
+                $result[] = [
+                    'dateOfDeparture' => $flight['productDateTime']['dateOfDeparture'] ?? '',
+                    'timeOfDeparture' => $flight['productDateTime']['timeOfDeparture'] ?? '',
+                    'dateOfArrival' => $flight['productDateTime']['dateOfArrival'] ?? '',
+                    'timeOfArrival' => $flight['productDateTime']['timeOfArrival'] ?? '',
+                    'marketingCarrier' => $flight['companyId']['marketingCarrier'] ?? '',
+                    'flightOrtrainNumber' => $flight['flightOrtrainNumber'] ?? '',
+                    'locationId' => [
+                        'departureCity' => $flight['location'][0]['locationId'] ?? '',
+                        'arrivalCity' => $flight['location'][1]['locationId'] ?? ''
+                    ]
+                ];
             }
         }
 
         return $result; // Devuelve solo los vuelos formateados que necesitas
     }
+
 
 
 
@@ -353,35 +345,46 @@ class FlightController extends Controller
     {
         $errors = [];
 
-        if (!$request->has('itineraries') || !is_array($request->input('itineraries')) || empty($request->input('itineraries'))) {
-            $errors[] = 'El parámetro itineraries es requerido y debe ser un array no vacío.';
-        }
+        // Validación usando el validador de Laravel
+        $validator = Validator::make($request->all(), [
+            'itineraries' => 'required|array|min:1',
+            'qty_passengers' => 'required|integer|min:1',
+            'adult' => 'required|integer|min:1',
+            'child' => 'nullable|integer|min:0',
+            'baby' => 'nullable|integer|min:0',
+            'itineraries.*.departureCity' => 'required|string|size:3',
+            'itineraries.*.arrivalCity' => 'required|string|size:3',
+            'itineraries.*.hour' => 'required|date',
+        ]);
 
-        if (!$request->has('qty_passengers') || !is_numeric($request->input('qty_passengers')) || $request->input('qty_passengers') < 1) {
-            $errors[] = 'El parámetro qty_passengers es requerido, debe ser un número entero y al menos 1.';
-        }
-
-        if (!$request->has('adult') || !is_numeric($request->input('adult')) || $request->input('adult') < 1) {
-            $errors[] = 'El parámetro adult es requerido, debe ser un número entero y al menos 1.';
+        // Verificar si las validaciones fallaron
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->all()], 400);
         }
 
         // Validación adicional para la suma de pasajeros
-        $child = $request->input('child') ?? 0;
-        $baby = $request->input('baby') ?? 0;
+        $child = $request->input('child', 0);
+        $baby = $request->input('baby', 0);
         $totalPassengers = $request->input('adult') + $child + $baby;
 
-        if ($totalPassengers !== (int)$request->input('qty_passengers')) {
+        if ($totalPassengers !== (int) $request->input('qty_passengers')) {
             $errors[] = 'La cantidad total de pasajeros debe ser la suma de los adultos, niños y bebés.';
         }
 
         // Validación de fecha de itinerarios
         $itineraries = $request->input('itineraries');
         foreach ($itineraries as $itinerary) {
-            $departureDate = new \DateTime($itinerary['hour']);
-            $currentDate = new \DateTime();
-            if ($departureDate < $currentDate) {
-                $errors[] = 'La fecha de salida no puede ser anterior a la fecha actual.';
-                break; // Salir del bucle si se encuentra un error
+            try {
+                $departureDate = new \DateTime($itinerary['hour']);
+                $currentDate = new \DateTime();
+
+                if ($departureDate < $currentDate) {
+                    $errors[] = 'La fecha de salida no puede ser anterior a la fecha actual.';
+                    break; // Salir del bucle si se encuentra un error
+                }
+            } catch (\Exception $e) {
+                $errors[] = 'Formato de fecha inválido en el itinerario.';
+                break;
             }
         }
 
@@ -390,25 +393,30 @@ class FlightController extends Controller
             return response()->json(['error' => $errors], 400);
         }
 
-        // Crear la reserva
-        $reserve = Reserve::create([
-            'qty_passengers' => $request->input('qty_passengers'),
-            'adult' => $request->input('adult'),
-            'child' => $child,
-            'baby' => $baby,
-        ]);
-
-        // Guardar itinerarios
-        foreach ($itineraries as $itinerary) {
-            Itinerary::create([
-                'reserve_id' => $reserve->id,
-                'departure_city' => $itinerary['departureCity'],
-                'arrival_city' => $itinerary['arrivalCity'],
-                'departure_hour' => $itinerary['hour'],
+        try {
+            // Crear la reserva
+            $reserve = Reserve::create([
+                'qty_passengers' => $request->input('qty_passengers'),
+                'adult' => $request->input('adult'),
+                'child' => $child,
+                'baby' => $baby,
             ]);
-        }
 
-        return response()->json(['message' => 'Reservación guardada correctamente. Mira tus reservas!!'], 201);
+            // Guardar itinerarios asociados a la reserva
+            foreach ($itineraries as $itinerary) {
+                Itinerary::create([
+                    'reserve_id' => $reserve->id,
+                    'departure_city' => $itinerary['departureCity'],
+                    'arrival_city' => $itinerary['arrivalCity'],
+                    'departure_hour' => $itinerary['hour'],
+                ]);
+            }
+
+            return response()->json(['message' => 'Reservación guardada correctamente. Mira tus reservas!!'], 201);
+        } catch (\Exception $e) {
+            // Manejar errores de base de datos o excepciones generales
+            return response()->json(['error' => 'Ocurrió un error al guardar la reserva. Inténtelo de nuevo.'], 500);
+        }
     }
 
 
